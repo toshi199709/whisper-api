@@ -13,6 +13,7 @@ def download_audio(youtube_url, output_path):
             'preferredcodec': 'mp3',
             'preferredquality': '192',
         }],
+        'cookiesfrombrowser': ('chrome',),
         'quiet': True,
     }
 
