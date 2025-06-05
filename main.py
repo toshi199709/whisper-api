@@ -5,7 +5,7 @@ import tempfile
 app = FastAPI()
 
 # Whisperモデルの読み込み（baseを使用）
-model = whisper.load_model("base")
+model = whisper.load_model("tiny")
 
 @app.post("/transcribe")
 async def transcribe(file: UploadFile = File(...)):
