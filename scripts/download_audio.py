@@ -8,7 +8,7 @@ def download_audio(youtube_url, output_path):
     ydl_opts = {
         'format': 'bestaudio/best',
         'outtmpl': temp_base + '.%(ext)s',
-        'cookiefile': 'youtube_cookies.txt',  # ← Braveから取得したクッキーファイルを指定！
+        'cookiefile': os.path.join(os.path.dirname(__file__), 'youtube_cookies.txt'),
         'postprocessors': [{
             'key': 'FFmpegExtractAudio',
             'preferredcodec': 'mp3',
