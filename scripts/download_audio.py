@@ -8,14 +8,17 @@ def download_audio(youtube_url, output_path):
     ydl_opts = {
         'format': 'bestaudio/best',
         'outtmpl': temp_base + '.%(ext)s',
-        'cookiefile': os.path.join(os.path.dirname(__file__), 'youtube_cookies.txt'),
+        'cookiefile': '/app/scripts/cookies.txt',
         'postprocessors': [{
             'key': 'FFmpegExtractAudio',
             'preferredcodec': 'mp3',
             'preferredquality': '192',
         }],
+        'prefer_ffmpeg': True,  # ← これも忘れずに！
         'quiet': True,
+        'noplaylist': True
     }
+
 
     with yt_dlp.YoutubeDL(ydl_opts) as ydl:
         ydl.download([youtube_url])
