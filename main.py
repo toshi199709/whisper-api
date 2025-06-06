@@ -32,10 +32,19 @@ async def transcribe_url(url: str = Form(...)):
     if model is None:
         model = whisper.load_model("tiny")
 
-    with tempfile.NamedTemporaryFile(suffix=".mp3", delete=False) as tmp:
-        audio_path = tmp.name
+    with tempfile.NamedTemporaryFile(suffix=".mp3", delete=False) as tmp_mp3:
+        mp3_path = tmp_mp3.name
 
-    subprocess.run(["python3", "scripts/download_audio.py", url, audio_path])
+    subprocess.run(["python3", "scripts/download_audio.py", url, mp3_path], check=True)
 
-    result = model.transcribe(audio_path, language="ja")
+    # MP3 → WAVに変換
+    wav_path = mp3_path.replace(".mp3", ".wav")
+    subprocess.run([
+        "ffmpeg", "-y", "-i", mp3_path,
+        "-ar", "16000", "-ac", "1", "-f", "wav", wav_path
+    ], check=True)
+
+    # Whisperで文字起こし
+    result = model.transcribe(wav_path, language="ja")
+
     return JSONResponse(content={"text": result["text"]})
