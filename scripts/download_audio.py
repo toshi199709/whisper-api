@@ -8,7 +8,7 @@ def download_audio(youtube_url, output_path):
     ydl_opts = {
         'format': 'bestaudio/best',
         'outtmpl': temp_base + '.%(ext)s',
-        'cookiefile': '/app/scripts/cookies.txt',
+        'cookiefile': '/app/scripts/youtube_cookies.txt',
         'postprocessors': [{
             'key': 'FFmpegExtractAudio',
             'preferredcodec': 'mp3',
