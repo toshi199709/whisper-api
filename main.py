@@ -1,4 +1,5 @@
 from fastapi import FastAPI, File, UploadFile
+from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 import whisper
 import os
@@ -6,7 +7,18 @@ import subprocess
 import uuid
 
 app = FastAPI()
-model = whisper.load_model("tiny")  # small や medium でもOK
+
+# ✅ CORS設定（Railsローカルからのアクセスを許可）
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["http://localhost:3000"],  # ← 開発環境用
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+
+# ✅ モデルの読み込み（メモリ対策済）
+model = whisper.load_model("tiny")
 
 @app.post("/transcribe")
 async def transcribe(file: UploadFile = File(...)):
@@ -19,8 +31,8 @@ async def transcribe(file: UploadFile = File(...)):
     with open(input_path, "wb") as f:
         f.write(await file.read())
 
-    # ffmpeg で webm → mp3 に変換
     try:
+        # ffmpeg で webm → mp3 に変換
         subprocess.run(["ffmpeg", "-y", "-i", input_path, mp3_path], check=True)
 
         # Whisper で文字起こし
