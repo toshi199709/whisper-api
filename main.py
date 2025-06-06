@@ -1,50 +1,35 @@
-from fastapi import FastAPI, UploadFile, File, Form
+from fastapi import FastAPI, File, UploadFile
 from fastapi.responses import JSONResponse
 import whisper
-import tempfile
+import os
 import subprocess
+import uuid
 
 app = FastAPI()
-
-model = None  # lazy load
+model = whisper.load_model("base")  # small や medium でもOK
 
 @app.post("/transcribe")
 async def transcribe(file: UploadFile = File(...)):
-    global model
-    if model is None:
-        model = whisper.load_model("tiny")  # 必要なら "base", "small" などに変更
+    # 一時ファイル名をユニークにする
+    unique_id = str(uuid.uuid4())
+    input_path = f"temp_{unique_id}.webm"
+    mp3_path = f"temp_{unique_id}.mp3"
 
-    with tempfile.NamedTemporaryFile(delete=False, suffix=".mp3") as tmp:
-        tmp.write(await file.read())
-        tmp_path = tmp.name
+    # アップロードされた音声を保存
+    with open(input_path, "wb") as f:
+        f.write(await file.read())
 
-    result = model.transcribe(
-        tmp_path,
-        language="ja"
-    )
+    # ffmpeg で webm → mp3 に変換
+    try:
+        subprocess.run(["ffmpeg", "-y", "-i", input_path, mp3_path], check=True)
 
-    return {"text": result["text"]}
+        # Whisper で文字起こし
+        result = model.transcribe(mp3_path, language="ja")
 
+        # クリーンアップ
+        os.remove(input_path)
+        os.remove(mp3_path)
 
-@app.post("/transcribe_url")
-async def transcribe_url(url: str = Form(...)):
-    global model
-    if model is None:
-        model = whisper.load_model("tiny")
-
-    with tempfile.NamedTemporaryFile(suffix=".mp3", delete=False) as tmp_mp3:
-        mp3_path = tmp_mp3.name
-
-    subprocess.run(["python3", "scripts/download_audio.py", url, mp3_path], check=True)
-
-    # MP3 → WAVに変換
-    wav_path = mp3_path.replace(".mp3", ".wav")
-    subprocess.run([
-        "ffmpeg", "-y", "-i", mp3_path,
-        "-ar", "16000", "-ac", "1", "-f", "wav", wav_path
-    ], check=True)
-
-    # Whisperで文字起こし
-    result = model.transcribe(wav_path, language="ja")
-
-    return JSONResponse(content={"text": result["text"]})
+        return JSONResponse(content={"text": result["text"]})
+    except Exception as e:
+        return JSONResponse(content={"error": str(e)}, status_code=500)
