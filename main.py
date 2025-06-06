@@ -6,7 +6,7 @@ import subprocess
 import uuid
 
 app = FastAPI()
-model = whisper.load_model("base")  # small や medium でもOK
+model = whisper.load_model("tiny")  # small や medium でもOK
 
 @app.post("/transcribe")
 async def transcribe(file: UploadFile = File(...)):
