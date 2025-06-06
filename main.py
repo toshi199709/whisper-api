@@ -8,7 +8,7 @@ import uuid
 
 app = FastAPI()
 
-# ✅ CORS設定：Railsローカルからのアクセス許可（本番ではドメイン限定推奨）
+# ✅ CORS設定：Railsローカルからのアクセス許可
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["http://localhost:3000"],
@@ -17,7 +17,12 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# ✅ Whisperモデルの読み込み（tiny：軽量でメモリ節約）
+# ✅ ルートエンドポイント（Renderのヘルスチェック用）
+@app.get("/")
+async def root():
+    return {"message": "Whisper API is running"}
+
+# ✅ Whisperモデルの読み込み（tiny使用）
 model = whisper.load_model("tiny")
 
 @app.post("/transcribe")
@@ -31,7 +36,7 @@ async def transcribe(file: UploadFile = File(...)):
         with open(input_path, "wb") as f:
             f.write(await file.read())
 
-        # webm → mp3 へ変換（ffmpeg使用）
+        # webm → mp3 へ変換
         subprocess.run(["ffmpeg", "-y", "-i", input_path, mp3_path], check=True)
 
         # Whisperで文字起こし
