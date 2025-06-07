@@ -23,7 +23,7 @@ async def root():
     return {"message": "Whisper API is running"}
 
 # ✅ Whisperモデルをグローバルに1度だけロード
-model = whisper.load_model("tiny.en")
+model = whisper.load_model("tiny")
 
 @app.post("/transcribe")
 async def transcribe(file: UploadFile = File(...)):
