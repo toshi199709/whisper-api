@@ -11,7 +11,7 @@ app = FastAPI()
 # ✅ CORS設定：ローカル開発や本番からのアクセスを許可
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:3000"],  # ← 本番でのCORSを許すために "*"（必要ならドメインを限定）
+    allow_origins=["*"],  # ← 本番でのCORSを許すために "*"（必要ならドメインを限定）
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
